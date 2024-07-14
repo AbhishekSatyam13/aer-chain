@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState } from "react";
 import { ListViewWrapper } from "./style";
 import {
   Button,
@@ -10,6 +10,7 @@ import {
   Col,
   Select,
   message,
+  Tag
 } from "antd";
 import record from "../../../mock/mockData.json";
 import { v4 as uuidv4 } from "uuid";
@@ -77,11 +78,13 @@ const ListView = () => {
       title: "Trip Id",
       key: "tripId",
       render: (actionIndex) => <a>{actionIndex.tripId}</a>,
+      align: 'center'
     },
     {
       title: "Transporter",
       dataIndex: "transporter",
       key: "transporter",
+      align: 'center'
     },
     {
       title: "Source",
@@ -91,6 +94,7 @@ const ListView = () => {
       sorter: (a, b) => a.source.length - b.source.length,
       onFilter: (value, record) => record.source.startsWith(value),
       filterSearch: true,
+      align: 'center'
     },
     {
       title: "Destination",
@@ -98,11 +102,13 @@ const ListView = () => {
       key: "dest",
       filters: placesData.places,
       onFilter: (value, record) => record.source.startsWith(value),
+      align: 'center'
     },
     {
       title: "Phone Number",
       dataIndex: "phoneNumber",
       key: "phoneNumber",
+      align: 'center'
     },
     {
       title: "ETA",
@@ -123,18 +129,32 @@ const ListView = () => {
       title: "Distance Remaining",
       dataIndex: "distanceRemaining",
       key: "distanceRemaining",
+      align: 'center'
     },
     {
       title: "Current Status",
       dataIndex: "currenStatus",
       key: "currenStatus",
+      align: 'center'
     },
+    {
+        title: "TAT status",
+        key: "tat",
+        align: 'center',
+        render: (actionIndex) => {
+            if(actionIndex.etaDays < 1) return <Tag>Others</Tag>
+            const diff = (new Date(actionIndex.lastPingTime) - new Date(actionIndex.createdAt))/(1000*60*60*24)
+            if(diff > actionIndex.etaDays) return <Tag color="red">Delayed</Tag>;
+            return <Tag color="green">On time</Tag>
+        }
+      },
     {
       title: "Action",
       key: "action",
+      align: 'center',
       render: (actionIndex) => (
         <Button
-          type="dashed"
+          type="primary"
           onClick={() => {
             setPayload(actionIndex);
             setModal(true);
