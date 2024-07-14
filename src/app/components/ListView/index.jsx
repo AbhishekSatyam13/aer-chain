@@ -1,76 +1,37 @@
 import React, { useEffect, useState } from "react";
 import { ListViewWrapper } from "./style";
-import { Button, Table, Modal, Form, Input, Row, Col, Select, message } from "antd";
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Input,
+  Row,
+  Col,
+  Select,
+  message,
+} from "antd";
 import record from "../../../mock/mockData.json";
 import { v4 as uuidv4 } from "uuid";
+import placesData from "../../../mock/mockPlaces.json";
 
 const { Option } = Select;
 
-const columns = [
-  {
-    title: "Trip Id",
-    key: "tripId",
-    render: (actionIndex) => <a>{actionIndex.tripId}</a>,
-  },
-  {
-    title: "Transporter",
-    dataIndex: "transporter",
-    key: "transporter",
-  },
-  {
-    title: "Source",
-    dataIndex: "source",
-    key: "source",
-  },
-  {
-    title: "Destination",
-    dataIndex: "dest",
-    key: "dest",
-  },
-  {
-    title: "Phone Number",
-    dataIndex: "phoneNumber",
-    key: "phoneNumber",
-  },
-  {
-    title: "ETA",
-    key: "tripEndTime",
-    render: (actionIndex) => {
-      if (!actionIndex.tripEndTime) return "-";
-      const date = new Date(actionIndex.tripEndTime);
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1; // Months are zero-indexed in JavaScript
-      const day = date.getDate();
-      const formattedDate = `${year}-${month.toString().padStart(2, "0")}-${day
-        .toString()
-        .padStart(2, "0")}`;
-      return formattedDate;
-    },
-  },
-  {
-    title: "Distance Remaining",
-    dataIndex: "distanceRemaining",
-    key: "distanceRemaining",
-  },
-  {
-    title: "Current Status",
-    dataIndex: "currenStatus",
-    key: "currenStatus",
-  },
-];
+const INITIAL_STATE = {
+  tripId: -1,
+  source: "",
+  phoneNumber: "",
+  transporter: "",
+  dest: "",
+  currenStatus: "Booked",
+};
 
 const ListView = () => {
   //...................Hooks...................//
 
   const [isModal, setModal] = useState(false);
   const [mainRecord, setMainRecord] = useState([]);
-  const [payload, setPayload] = useState({
-    tripId: uuidv4(),
-    source: "",
-    phoneNumber: "",
-    transporter: '',
-    dest: '',
-  });
+  const [payload, setPayload] = useState(INITIAL_STATE);
 
   useEffect(() => {
     if (window.localStorage.getItem("tableRecord")) {
@@ -86,29 +47,118 @@ const ListView = () => {
   const handleChange = (fieldName, event) => {
     setPayload((prevState) => ({
       ...prevState,
-      [fieldName]: event.target?.value ?? event
+      [fieldName]: event.target?.value ?? event,
     }));
   };
 
   const handleSubmit = () => {
-    if(Object.values(payload).some(item => !item)){
+    if(!payload.source || !payload.transporter || !payload.dest || !payload.phoneNumber){
         message.info("All fields are mandatory");
-        return;
+      return;
     }
-    const existingData = JSON.parse(localStorage.getItem('tableRecord'));
-    existingData.unshift(payload);
-    setMainRecord(existingData);
-    message.success("Successfully Added trip!!");
-    localStorage.setItem('tableRecord',JSON.stringify(existingData));
-  }
+    const existingData = JSON.parse(localStorage.getItem("tableRecord"));
+    if (payload.trip === -1) {
+      //creating new
+      existingData.unshift({ ...payload, tripId: uuidv4() });
+      setMainRecord(existingData);
+      message.success("Successfully Added trip!!");
+      localStorage.setItem("tableRecord", JSON.stringify(existingData));
+    } else {
+      //updating status
+        const findIndex = existingData.findIndex(item => item.tripId === payload.tripId);
+        console.log("findIndex",findIndex)
+    }
 
+    setModal(false);
+  };
+
+  const columns = [
+    {
+      title: "Trip Id",
+      key: "tripId",
+      render: (actionIndex) => <a>{actionIndex.tripId}</a>,
+    },
+    {
+      title: "Transporter",
+      dataIndex: "transporter",
+      key: "transporter",
+    },
+    {
+      title: "Source",
+      dataIndex: "source",
+      key: "source",
+      filters: placesData.places,
+      sorter: (a, b) => a.source.length - b.source.length,
+      onFilter: (value, record) => record.source.startsWith(value),
+      filterSearch: true,
+    },
+    {
+      title: "Destination",
+      dataIndex: "dest",
+      key: "dest",
+      filters: placesData.places,
+      onFilter: (value, record) => record.source.startsWith(value),
+    },
+    {
+      title: "Phone Number",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
+    },
+    {
+      title: "ETA",
+      key: "tripEndTime",
+      render: (actionIndex) => {
+        if (!actionIndex.tripEndTime) return "-";
+        const date = new Date(actionIndex.tripEndTime);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1; // Months are zero-indexed in JavaScript
+        const day = date.getDate();
+        const formattedDate = `${year}-${month
+          .toString()
+          .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+        return formattedDate;
+      },
+    },
+    {
+      title: "Distance Remaining",
+      dataIndex: "distanceRemaining",
+      key: "distanceRemaining",
+    },
+    {
+      title: "Current Status",
+      dataIndex: "currenStatus",
+      key: "currenStatus",
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (actionIndex) => (
+        <Button
+          type="dashed"
+          onClick={() => {
+            setPayload(actionIndex);
+            setModal(true);
+          }}
+        >
+          Update Status
+        </Button>
+      ),
+    },
+  ];
+
+  const handleAdd = () => {
+    setPayload({ ...INITIAL_STATE });
+    setModal(true);
+  };
+
+  console.log("payload", payload);
   return (
     <ListViewWrapper>
       <header>
         <h3>Trip List</h3>
         <div>
-          <Button type="primary" onClick={() => setModal(true)}>
-            Add Trip
+          <Button type="primary" onClick={handleAdd}>
+            {payload.tripId === -1 ? 'Add Trip' : 'Update Status'}
           </Button>
         </div>
       </header>
@@ -119,39 +169,85 @@ const ListView = () => {
         loading={mainRecord.length < 1}
       />
       <Modal
-        title="Add Trip"
+        title={payload.tripId === -1 ? "Add Trip" : "Update Status"}
         open={isModal}
         width={900}
         footer={[
-          <Button onClick={() => setModal(false)} key='cancel'>Cancel</Button>,
-          <Button type="primary" onClick={handleSubmit} key='submit'>Add Trip</Button>,
+          <Button onClick={() => setModal(false)} key="cancel">
+            Cancel
+          </Button>,
+          <Button type="primary" onClick={handleSubmit} key="submit">
+            {payload.tripId === -1 ? "Add Trip" : "Update Status"}
+          </Button>,
         ]}
         onCancel={() => setModal(false)}
       >
-        <Form name="Add trip">
+        <Form name="form trip">
           <Row gutter={24}>
             <Col span={12}>
-              <Form.Item label="Trip Id" required>
+              {/* <Form.Item label="Trip Id" required>
                 <Input value={payload.tripId} disabled />
-              </Form.Item>
+              </Form.Item> */}
               <Form.Item label="Source" required>
-                <Input onChange={(event) => handleChange("source", event)} />
+                <Input
+                  onChange={(event) => handleChange("source", event)}
+                  value={payload.source}
+                />
               </Form.Item>
               <Form.Item label="Ph Number" required>
-                <Input onChange={(event) => handleChange("phoneNumber", event)}/>
+                <Input
+                  disabled={payload.tripId !== -1}
+                  onChange={(event) => handleChange("phoneNumber", event)}
+                  value={payload.phoneNumber}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item label="Transporter" required>
-                <Select onChange={(event) => handleChange("transporter", event)}>
-                    <Option value="FedEx" key="FedEx">FedEx</Option>
-                    <Option value="Bluedart" key="Bluedart">Bluedart</Option>
-                    <Option value="DHL" key="DHL">DHL</Option>
-                    <Option value="Gati" key="Gati">Gati</Option>
+                <Select
+                  disabled={payload.tripId !== -1}
+                  onChange={(event) => handleChange("transporter", event)}
+                  value={payload.transporter}
+                >
+                  <Option value="FedEx" key="FedEx">
+                    FedEx
+                  </Option>
+                  <Option value="Bluedart" key="Bluedart">
+                    Bluedart
+                  </Option>
+                  <Option value="DHL" key="DHL">
+                    DHL
+                  </Option>
+                  <Option value="Gati" key="Gati">
+                    Gati
+                  </Option>
                 </Select>
               </Form.Item>
               <Form.Item label="Destination" required>
-                <Input onChange={(event) => handleChange("dest", event)}/>
+                <Input
+                  disabled={payload.tripId !== -1}
+                  onChange={(event) => handleChange("dest", event)}
+                  value={payload.dest}
+                />
+              </Form.Item>
+              <Form.Item label="Status" required>
+                <Select
+                  disabled={payload.tripId === -1}
+                  value={payload.currenStatus}
+                >
+                  <Option value="Booked" key="Booked">
+                    Booked
+                  </Option>
+                  <Option value="In Transit" key="In Transit">
+                    In Transit
+                  </Option>
+                  <Option value="Reached Destination" key="Reached Destination">
+                    Reached Destination
+                  </Option>
+                  <Option value="Delivered" key="Delivered">
+                    Delivered
+                  </Option>
+                </Select>
               </Form.Item>
             </Col>
           </Row>

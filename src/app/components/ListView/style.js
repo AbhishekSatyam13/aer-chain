@@ -9,6 +9,7 @@ export const ListViewWrapper = styled.div`
         display: flex;
         justify-content: space-between;
         margin-bottom: 20px;
+        font-weight: 800;
     }
     a{
         color: #3388EB;

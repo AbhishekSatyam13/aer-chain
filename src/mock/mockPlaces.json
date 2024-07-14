@@ -1,0 +1,24 @@
+{
+  "places": [
+    {
+      "text": "Kota",
+      "value": "Kota"
+    },
+    {
+      "text": "Mumbai",
+      "value": "Mumbai"
+    },
+    {
+      "text": "Visakhapatnam",
+      "value": "Visakhapatnam"
+    },
+    {
+      "text": "Patna",
+      "value": "Patna"
+    },
+    {
+      "text": "Indore",
+      "value": "Indore"
+    }
+  ]
+}
