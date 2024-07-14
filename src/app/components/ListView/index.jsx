@@ -60,14 +60,14 @@ const ListView = () => {
     if (payload.trip === -1) {
       //creating new
       existingData.unshift({ ...payload, tripId: uuidv4() });
-      setMainRecord(existingData);
       message.success("Successfully Added trip!!");
       localStorage.setItem("tableRecord", JSON.stringify(existingData));
     } else {
       //updating status
         const findIndex = existingData.findIndex(item => item.tripId === payload.tripId);
-        console.log("findIndex",findIndex)
+        existingData[findIndex].currenStatus = payload.currenStatus;
     }
+    setMainRecord(existingData);
 
     setModal(false);
   };
@@ -151,7 +151,6 @@ const ListView = () => {
     setModal(true);
   };
 
-  console.log("payload", payload);
   return (
     <ListViewWrapper>
       <header>
@@ -234,6 +233,7 @@ const ListView = () => {
                 <Select
                   disabled={payload.tripId === -1}
                   value={payload.currenStatus}
+                  onChange={(event) => handleChange("currenStatus", event)}
                 >
                   <Option value="Booked" key="Booked">
                     Booked
